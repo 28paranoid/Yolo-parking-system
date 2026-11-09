@@ -31,12 +31,12 @@ FUSE_CUSTOM_VEHICLES = True    # also merge your custom 'car' detections with th
 # "spots = where vehicles stay stationary" calibration so it still runs.
 
 # --- Detection confidence ---
-CONFIDENCE_THRESHOLD = 0.35    # vehicles (pretrained)
+CONFIDENCE_THRESHOLD = 0.50    # vehicles (pretrained)
 SPACE_CONFIDENCE = 0.35        # parking spaces (custom model)
 NMS_IOU = 0.6                  # merge duplicate vehicle boxes coming from the two models
 
 # --- Occupancy / spot geometry ---
-MIN_STATIONARY_TIME = 5.0
+MIN_STATIONARY_TIME = 1.0
 SPOT_MERGE_DISTANCE = 30
 MEMORY_FRAMES = 60
 MIN_SPOT_AREA = 1500
@@ -46,7 +46,8 @@ MAX_MOVEMENT_FOR_PARKED = 10   # px movement still considered "parked"
 # --- Occupancy robustness (hysteresis + flicker grace) ---
 IOU_KEEP_THRESHOLD = 0.07      # lower overlap bar to KEEP counting once entry is in progress
 ENTRY_MISS_GRACE = 4           # processed frames without overlap tolerated before progress resets
-REQUIRE_CENTER_IN_SPOT = True  # vehicle's ground point must sit INSIDE the spot (rejects passing cars beside it)
+REQUIRE_CENTER_IN_SPOT = True  # reject passing cars: car center/ground must be in the spot (or it must cover SPOT_COVER_MIN of it)
+SPOT_COVER_MIN = 0.45          # a car covering >= this fraction of the spot counts even if its point is just outside
 MIN_TRACK_AGE = 3              # frames a vehicle must be tracked before it can occupy a spot
 
 DEBUG_OCCUPANCY = False         # True -> prints per-spot overlap each processed frame (diagnostics)

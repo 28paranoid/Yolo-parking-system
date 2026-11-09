@@ -226,8 +226,14 @@ try:
                     ov = inter / denom if denom > 0 else 0.0
                     if ov <= iou_gate:
                         continue
-                    # Reject passing cars: the vehicle's ground point must be inside the spot.
-                    if config.REQUIRE_CENTER_IN_SPOT and not spot_poly.contains(Point(veh['ground'])):
+                    # Reject passing cars in the lane. A real parked car satisfies at
+                    # least one of: center inside spot, ground point inside spot, or it
+                    # covers a big fraction of the spot. A lane car satisfies none.
+                    cover = inter / spot_area if spot_area > 0 else 0.0
+                    if config.REQUIRE_CENTER_IN_SPOT and not (
+                        spot_poly.contains(Point(veh['center'])) or
+                        spot_poly.contains(Point(veh['ground'])) or
+                        cover >= config.SPOT_COVER_MIN):
                         continue
                     # Reject brand-new/fleeting tracks and moving cars.
                     if tracker_memory.age(tid) < config.MIN_TRACK_AGE:

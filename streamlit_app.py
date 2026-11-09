@@ -113,21 +113,22 @@ def build_intervals(df):
 st.sidebar.header("⚙️ Parking rate")
 rate = st.sidebar.number_input("Rate (Nu)", min_value=0.0, value=20.0, step=1.0)
 block = st.sidebar.number_input("Per block (min)", min_value=1.0, value=30.0, step=1.0)
-gst = st.sidebar.number_input("GST (%)", min_value=0.0, value=5.0, step=0.5)
-grace = st.sidebar.number_input("Free minutes", min_value=0.0, value=0.0, step=1.0)
-scale = st.sidebar.number_input("Time scale ×", min_value=0.1, value=60.0, step=1.0,
-                                help="Clips last seconds. 60 = each video second counts as a minute.")
-st.sidebar.caption("Billed per started block, plus GST.")
+st.sidebar.caption(f"Nu {rate:g} per {block:g} min, billed pro-rata.")
+
+# Fixed fee parameters (no longer shown in the sidebar)
+GST = 0.0      # percent
+GRACE = 0.0    # free minutes
+SCALE = 60.0   # clips last seconds; 60 => each video second counts as a minute
 st.sidebar.divider()
 live = st.sidebar.toggle("Live (auto-refresh)", value=True)
 refresh_s = st.sidebar.slider("Refresh every (s)", 1, 10, 3)
 
 
 def fee(s, e):
-    mins = (e - s) * scale / 60.0
-    if mins <= grace:
-        return 0.0
-    return math.ceil(mins / block) * rate * (1 + gst / 100.0)
+    # Pro-rated: starts at Nu 0 and rises gradually with time (no block rounding).
+    # `rate` is the charge for one full `block` of minutes, split evenly across it.
+    mins = max(0.0, (e - s) * SCALE / 60.0 - GRACE)
+    return (mins / block) * rate * (1 + GST / 100.0)
 
 
 if live:
@@ -170,19 +171,12 @@ h2.caption("🟢 Live · reading parking_logs/" if src == "live"
 n = len(spot_ids)
 o = count_at(T)
 past = df[df["t"] <= T]
-closed = [x for x in iv if x["closed"] and x["e"] <= T]
-avg_stay = sum(x["e"] - x["s"] for x in closed) / len(closed) if closed else 0
-revenue = sum(fee(x["s"], x["e"]) for x in closed)
-accruing = sum(fee(x["s"], T) for x in iv if x["s"] <= T < x["e"])
 
-k = st.columns(7)
+k = st.columns(4)
 k[0].metric("Occupied", f"{o} / {n}")
 k[1].metric("Occupancy", f"{round(o / n * 100) if n else 0}%")
 k[2].metric("Entries", int((past["Event"].str.upper() == "ENTRY").sum()))
 k[3].metric("Exits", int((past["Event"].str.upper() == "EXIT").sum()))
-k[4].metric("Avg. stay", fmt(avg_stay) if closed else "–")
-k[5].metric("Collected", nu(revenue))
-k[6].metric("Accruing", nu(accruing))
 
 st.divider()
 
