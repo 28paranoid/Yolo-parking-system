@@ -147,6 +147,10 @@ class SmartVehicleTracker:
         if track_id in self.lost_vehicles:
             del self.lost_vehicles[track_id]
 
+    def age(self, track_id):
+        """How many processed frames this track has been observed."""
+        return len(self.vehicle_history.get(track_id, ()))
+
     def is_stationary(self, track_id, max_movement=10):
         """Returns True if vehicle moved less than threshold in recent frames"""
         if track_id not in self.vehicle_history or len(self.vehicle_history[track_id]) < 5:

@@ -76,6 +76,25 @@ is on). Output:
 
 ---
 
+## 5. Live dashboard (optional)
+
+A Streamlit dashboard reads the same files `main.py` writes and refreshes
+automatically, so it updates live while the model runs.
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Run it from the project folder (so it finds `parking_logs/` and
+`parking_spots.json`). Start `main.py` in one terminal and the dashboard in
+another — as events are logged, the dashboard updates every few seconds.
+
+It shows: occupancy KPIs, a lot map colored by occupancy, occupancy-over-time,
+a per-spot timeline, the event log with Bhutan parking-rate fees, and recent
+snapshots. If no run has happened yet, it shows sample data so you can demo it.
+
+---
+
 ## Configuration (`config.py`)
 
 | Setting | Meaning |

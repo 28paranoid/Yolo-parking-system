@@ -5,7 +5,7 @@ import numpy as np
 from ultralytics import YOLO
 import torch
 from boxmot import create_tracker
-from shapely.geometry import Polygon, box as shapely_box
+from shapely.geometry import Polygon, Point, box as shapely_box
 import gc
 
 # Custom modules
@@ -200,7 +200,8 @@ try:
                         active_vehicles[track_id] = {
                             'box': smoothed,
                             'poly': shapely_box(smoothed[0], smoothed[1], smoothed[2], smoothed[3]),
-                            'center': ((smoothed[0] + smoothed[2]) // 2, (smoothed[1] + smoothed[3]) // 2)
+                            'center': ((smoothed[0] + smoothed[2]) // 2, (smoothed[1] + smoothed[3]) // 2),
+                            'ground': (int((smoothed[0] + smoothed[2]) // 2), int(smoothed[3]))
                         }
 
             lost_vehicles = tracker_memory.get_lost_vehicles(frame_count)
@@ -217,22 +218,34 @@ try:
                 iou_gate = config.IOU_KEEP_THRESHOLD if in_progress else config.IOU_THRESHOLD
 
                 best_vehicle = None
-                max_iou = 0
+                max_ov = 0
                 for tid, veh in active_vehicles.items():
-                    intersection_area = spot_poly.intersection(veh['poly']).area
-                    iou = intersection_area / spot_area
-                    if iou > iou_gate and iou > max_iou:
-                        if tracker_memory.is_stationary(tid, config.MAX_MOVEMENT_FOR_PARKED):
-                            max_iou = iou
-                            best_vehicle = {'id': tid, **veh}
+                    # Overlap coefficient (size-independent): fraction of the smaller box.
+                    inter = spot_poly.intersection(veh['poly']).area
+                    denom = min(spot_area, veh['poly'].area)
+                    ov = inter / denom if denom > 0 else 0.0
+                    if ov <= iou_gate:
+                        continue
+                    # Reject passing cars: the vehicle's ground point must be inside the spot.
+                    if config.REQUIRE_CENTER_IN_SPOT and not spot_poly.contains(Point(veh['ground'])):
+                        continue
+                    # Reject brand-new/fleeting tracks and moving cars.
+                    if tracker_memory.age(tid) < config.MIN_TRACK_AGE:
+                        continue
+                    if not tracker_memory.is_stationary(tid, config.MAX_MOVEMENT_FOR_PARKED):
+                        continue
+                    if ov > max_ov:
+                        max_ov = ov
+                        best_vehicle = {'id': tid, **veh}
 
                 if not best_vehicle:
                     for tid, info in lost_vehicles.items():
                         if info['spot'] == idx:
                             lb = info['last_box']
                             lost_poly = shapely_box(lb[0], lb[1], lb[2], lb[3])
-                            intersection_area = spot_poly.intersection(lost_poly).area
-                            iou = intersection_area / spot_area
+                            inter = spot_poly.intersection(lost_poly).area
+                            denom = min(spot_area, lost_poly.area)
+                            iou = inter / denom if denom > 0 else 0.0
                             if iou > iou_gate:
                                 best_vehicle = {'id': tid, 'box': lb, 'poly': lost_poly}
                                 break
@@ -310,7 +323,10 @@ try:
         out_writer.write(frame)
 
         if config.SHOW_PREVIEW:
-            display_frame = cv2.resize(frame, (1280, 720))
+            # Scale to fit the window while preserving aspect ratio (never upscale),
+            # so portrait videos aren't stretched into a landscape box.
+            scale = min(1.0, config.PREVIEW_MAX_SIZE / max(width, height))
+            display_frame = cv2.resize(frame, (int(width * scale), int(height * scale))) if scale < 1.0 else frame
             cv2.imshow('Smart Parking System (Hybrid)', display_frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

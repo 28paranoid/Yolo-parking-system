@@ -11,3 +11,7 @@ shapely
 pandas
 matplotlib
 requests
+
+# Dashboard
+streamlit
+streamlit-autorefresh

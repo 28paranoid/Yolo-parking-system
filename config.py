@@ -31,7 +31,7 @@ FUSE_CUSTOM_VEHICLES = True    # also merge your custom 'car' detections with th
 # "spots = where vehicles stay stationary" calibration so it still runs.
 
 # --- Detection confidence ---
-CONFIDENCE_THRESHOLD = 0.40    # vehicles (pretrained)
+CONFIDENCE_THRESHOLD = 0.35    # vehicles (pretrained)
 SPACE_CONFIDENCE = 0.35        # parking spaces (custom model)
 NMS_IOU = 0.6                  # merge duplicate vehicle boxes coming from the two models
 
@@ -46,6 +46,8 @@ MAX_MOVEMENT_FOR_PARKED = 10   # px movement still considered "parked"
 # --- Occupancy robustness (hysteresis + flicker grace) ---
 IOU_KEEP_THRESHOLD = 0.07      # lower overlap bar to KEEP counting once entry is in progress
 ENTRY_MISS_GRACE = 4           # processed frames without overlap tolerated before progress resets
+REQUIRE_CENTER_IN_SPOT = True  # vehicle's ground point must sit INSIDE the spot (rejects passing cars beside it)
+MIN_TRACK_AGE = 3              # frames a vehicle must be tracked before it can occupy a spot
 
 DEBUG_OCCUPANCY = False         # True -> prints per-spot overlap each processed frame (diagnostics)
 
@@ -63,6 +65,9 @@ OUTPUT_FPS = 1
 # Live preview window. True = watch it run (press 'q' to stop).
 # False = no window, render the output video only (noticeably faster).
 SHOW_PREVIEW = True
+# Longest side (px) of the live preview window; keeps the video's aspect ratio
+# (portrait stays portrait). The saved output video is always full original size.
+PREVIEW_MAX_SIZE = 900
 
 # --- Manual parking-spot marking ---
 MANUAL_SPOTS_FILE = 'parking_spots.json'   # produced by mark_spots.py
