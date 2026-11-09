@@ -1,41 +1,20 @@
+# Large assets -> share via Google Drive, not GitHub
+*.mp4
+*.pt
+
+# Runtime outputs
+parking_logs/
+parking_result_video.mp4
+
 # Python
 __pycache__/
-*.py[cod]
-*.pyo
-*.egg-info/
-dist/
-build/
-*.egg
-
-# Virtual environments
+*.pyc
+.venv/
 venv/
 env/
-.venv/
 
-# Model weights (large binary files)
-*.pt
-*.pth
-*.onnx
-
-# Video files (too large for git)
-*.mp4
-*.avi
-*.mov
-*.mkv
-
-# Parking logs (generated at runtime)
-parking_logs/
-
-# IDE / Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS files
-Thumbs.db
+# OS / editor
 .DS_Store
-
-# Jupyter
-.ipynb_checkpoints/
+Thumbs.db
+.idea/
+.vscode/

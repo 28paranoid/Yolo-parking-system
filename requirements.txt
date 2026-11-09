@@ -1,0 +1,13 @@
+# Core detection + tracking
+ultralytics
+boxmot==10.0.21
+torch
+opencv-python
+numpy
+scipy
+shapely
+
+# Utilities
+pandas
+matplotlib
+requests

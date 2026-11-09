@@ -4,7 +4,7 @@ import shutil
 import torch
 
 # --- DEVICE ---
-DEVICE_INDEX = '0' if torch.cuda.is_available() else 'cpu'
+DEVICE_INDEX = 0 if torch.cuda.is_available() else 'cpu'
 YOLO_DEVICE = f"cuda:{DEVICE_INDEX}" if DEVICE_INDEX != 'cpu' else 'cpu'
 
 # --- VIDEO ---
